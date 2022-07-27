@@ -1,0 +1,67 @@
+server:
+  port: 8080
+  servlet:
+    contextPath: /cse-backend 
+
+spring:
+  jpa:
+    generate-ddl: true
+
+  data:
+    mongodb:
+      database: cse-backend
+      auto-index-creation: true
+
+service:
+  authService:
+    url: https://pie.authz.wpp.api.hp.com/
+    seviceName: cse-backend
+
+aws:
+  s3:
+    bucket: ces-backend-bucket-dev
+    region: us-east-1
+  endpoint: http://localhost:4566
+  sqs-queue-name: cse-backend-dev-sqs
+
+mongo:
+    url: mongodb://localhost:27017/
+#  database: cse-backend
+
+cse:
+  stratus-service:
+    upload-portal: https://portal.tropos-rnd.com/api/v1/projects/stratus/content/cse-backend/v1/local/
+    fetch-file-url: https://static-dev.tropos-rnd.com/stratus/cse-backend/v1/local/
+    credentials: stratus:kp1b0EfUCxtBMAR4E4hfcAZNXrCAXVW6N5UBqGG7Tzt3O9ruGJvXBLLjQnEJCe6r
+  app-mapping-service:
+    update-mapping-collection: false
+  
+cloud:
+  aws:
+    sqs:
+      endpoint: http://localhost:4566
+
+#cloud:
+#  aws:
+#    s3:
+#      endpoint: http://localhost:4566
+
+#cloud:
+#  aws:
+#    region:
+#      static: us-east-1
+#    credentials:
+#      profile-name: authly-ces-role
+
+script:
+  scheduler:
+    cron:
+      expression: 0 0/2 * * * *
+  compilation:
+    execution:
+      enabled: true
+
+logging:
+  level:
+    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
+    org.springframework.data.mongodb.repository.query: debug
