@@ -30,11 +30,19 @@ public class UserService {
         return userRepository.findById(Id);
     }
 
-    public UpdateResult removeHobbyEntry(String hobbyName){
-        Query removeQuery = Query.query(Criteria.where("id").is("user1"));
+    public UpdateResult removeHobbyEntry(String id,String hobbyName){
+        Query removeQuery = Query.query(Criteria.where("id").is(id));
         Update removeUpdate = new Update().pull("hobbies", Query.query(Criteria.where("hobbyName").is(hobbyName)));
         UpdateResult updateResult =
                 mongoTemplate.updateMulti(removeQuery, removeUpdate, User.class);
+        return updateResult;
+    }
+
+    public UpdateResult updateHobbyEntry(String hobbyName, int toPerWeek) {
+        Query hobbyQuery = Query.query(Criteria.where("hobbies.hobbyName").is(hobbyName));
+        Update removeUpdate = new Update().set("hobbies.$[entry].perWeek",toPerWeek).filterArray(Criteria.where("entry.hobbyName").is(hobbyName));
+        UpdateResult updateResult =
+                mongoTemplate.updateMulti(hobbyQuery, removeUpdate, User.class);
         return updateResult;
     }
 }
