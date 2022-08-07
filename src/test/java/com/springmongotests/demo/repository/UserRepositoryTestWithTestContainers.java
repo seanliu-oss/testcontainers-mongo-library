@@ -19,6 +19,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -96,11 +97,11 @@ class UserRepositoryTestWithTestContainers {
     }
 
     @Test
-    void ShouldUpdateEntryWithMatchingHobby() {
+    void updateSpecificHobbyEntryShouldUpdateEntryWithMatchingHobby() {
         this.userRepository.save(new User("user1", 42, List.of(new Hobby("Food", 2), new Hobby("Biking", 3))));
         this.userRepository.save(new User("user2", 45, List.of(new Hobby("Food", 2), new Hobby("Hiking", 3))));
 
-        UpdateResult updateResult = service.updateHobbyEntry("Biking", 7);
+        UpdateResult updateResult = service.updateSpecificHobbyEntry("Biking", 7);
         List<User> users = service.findUserByHobby("Biking");
 
         assertNotEquals(0, users.size());
@@ -108,5 +109,18 @@ class UserRepositoryTestWithTestContainers {
         log.info("{}", Map.of("updateResult", updateResult, "user1", firstUser));
 
         assertEquals(7, firstUser.getHobbies().get(1).getPerWeek());
+    }
+
+    @Test
+    void updateAllHobbyEntriesShouldUpdateAllEntriesInAllDocuments() {
+        this.userRepository.save(new User("user1", 42, List.of(new Hobby("Food", 2), new Hobby("Biking", 3))));
+        this.userRepository.save(new User("user2", 45, List.of(new Hobby("Food", 2), new Hobby("Hiking", 3))));
+
+        UpdateResult updateResult = service.updateAllHobbyEntries(7);
+        List<User> users = userRepository.findAll();
+
+        assertEquals(2, users.size());
+        users.stream()
+                .forEach(user -> Optional.ofNullable(user.getHobbies()).stream().flatMap(list -> list.stream()).forEach(hobby -> assertEquals(7, hobby.getPerWeek())));
     }
 }

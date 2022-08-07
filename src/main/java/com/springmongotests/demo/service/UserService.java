@@ -38,9 +38,17 @@ public class UserService {
         return updateResult;
     }
 
-    public UpdateResult updateHobbyEntry(String hobbyName, int toPerWeek) {
+    public UpdateResult updateSpecificHobbyEntry(String hobbyName, int toPerWeek) {
         Query hobbyQuery = Query.query(Criteria.where("hobbies.hobbyName").is(hobbyName));
         Update removeUpdate = new Update().set("hobbies.$[entry].perWeek",toPerWeek).filterArray(Criteria.where("entry.hobbyName").is(hobbyName));
+        UpdateResult updateResult =
+                mongoTemplate.updateMulti(hobbyQuery, removeUpdate, User.class);
+        return updateResult;
+    }
+
+    public UpdateResult updateAllHobbyEntries( int toPerWeek) {
+        Query hobbyQuery = new Query();
+        Update removeUpdate = new Update().set("hobbies.$[].perWeek",toPerWeek);
         UpdateResult updateResult =
                 mongoTemplate.updateMulti(hobbyQuery, removeUpdate, User.class);
         return updateResult;
