@@ -17,4 +17,5 @@ public class User {
     String id;
     Integer age;
     List<Hobby> hobbies;
+    List<Integer> luckyNumbers;
 }

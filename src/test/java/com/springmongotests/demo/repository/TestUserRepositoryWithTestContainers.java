@@ -5,6 +5,7 @@ import com.springmongotests.demo.data.Hobby;
 import com.springmongotests.demo.data.User;
 import com.springmongotests.demo.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.mongo.embedded.EmbeddedMongoAutoConfiguration;
@@ -21,13 +22,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Testcontainers
 @DataMongoTest(excludeAutoConfiguration = EmbeddedMongoAutoConfiguration.class)
 @Slf4j
-class UserRepositoryTestWithTestContainers {
+class TestUserRepositoryWithTestContainers {
     @Container
     static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:latest");
 
@@ -63,8 +63,8 @@ class UserRepositoryTestWithTestContainers {
 
     @Test
     void shouldReturnListOfUserWithMatchingAge() {
-        this.userRepository.save(new User("user1", 42, Collections.emptyList()));
-        this.userRepository.save(new User("user2", 55, Collections.emptyList()));
+        this.userRepository.save(new User("user1", 42, Collections.emptyList(), Collections.emptyList()));
+        this.userRepository.save(new User("user2", 55, Collections.emptyList(), Collections.emptyList()));
 
         List<User> customers = userRepository.findByAgeBetween(40, 56);
 
@@ -74,8 +74,8 @@ class UserRepositoryTestWithTestContainers {
 
     @Test
     void shouldReturnUserWithMatchingHobby() {
-        this.userRepository.save(new User("user1", 42, List.of(new Hobby("Food", 2), new Hobby("Biking", 3))));
-        this.userRepository.save(new User("user2", 45, List.of(new Hobby("Food", 2), new Hobby("Hiking", 3))));
+        this.userRepository.save(new User("user1", 42, List.of(new Hobby("Food", 2), new Hobby("Biking", 3)),List.of(1,2,3)));
+        this.userRepository.save(new User("user2", 45, List.of(new Hobby("Food", 2), new Hobby("Hiking", 3)), List.of(4,5,6)));
 
         List<User> customers = userRepository.findByHobbiesHobbyName("Food");
         assertEquals(2, customers.size());
@@ -86,8 +86,8 @@ class UserRepositoryTestWithTestContainers {
 
     @Test
     void shouldDeleteEntryWithMatchingHobby() {
-        this.userRepository.save(new User("user1", 42, List.of(new Hobby("Food", 2), new Hobby("Biking", 3))));
-        this.userRepository.save(new User("user2", 45, List.of(new Hobby("Food", 2), new Hobby("Hiking", 3))));
+        this.userRepository.save(new User("user1", 42, List.of(new Hobby("Food", 2), new Hobby("Biking", 3)),List.of(1,2,3)));
+        this.userRepository.save(new User("user2", 45, List.of(new Hobby("Food", 2), new Hobby("Hiking", 3)), List.of(4,5,6)));
 
         UpdateResult updateResult = service.removeHobbyEntry("user1", "Biking");
         User user1 = service.findUserById("user1").orElse(null);
@@ -97,9 +97,33 @@ class UserRepositoryTestWithTestContainers {
     }
 
     @Test
+    void shouldDeleteEntryWithNumberValue() {
+        this.userRepository.save(new User("user1", 42, List.of(new Hobby("Food", 2), new Hobby("Biking", 3)),List.of(1,2,3)));
+        this.userRepository.save(new User("user2", 45, List.of(new Hobby("Food", 2), new Hobby("Hiking", 3)), List.of(4,5,6)));
+
+        UpdateResult updateResult = service.removeLuckyNumber("user1", 2);
+        User user1 = service.findUserById("user1").orElse(null);
+
+        log.info("{}", Map.of("updateResult", updateResult, "user1", user1));
+        assertTrue(CollectionUtils.isEqualCollection(List.of(1,3), user1.getLuckyNumbers()));
+    }
+
+    @Test
+    void shouldDeleteEntryWithNumberValueList() {
+        this.userRepository.save(new User("user1", 42, List.of(new Hobby("Food", 2), new Hobby("Biking", 3)),List.of(1,2,3)));
+        this.userRepository.save(new User("user2", 45, List.of(new Hobby("Food", 2), new Hobby("Hiking", 3)), List.of(4,5,6)));
+
+        UpdateResult updateResult = service.removeLuckyNumbers("user1", new Integer[]{1,2});
+        User user1 = service.findUserById("user1").orElse(null);
+
+        log.info("{}", Map.of("updateResult", updateResult, "user1", user1));
+        assertTrue(CollectionUtils.isEqualCollection(List.of(3), user1.getLuckyNumbers()));
+    }
+
+    @Test
     void updateSpecificHobbyEntryShouldUpdateEntryWithMatchingHobby() {
-        this.userRepository.save(new User("user1", 42, List.of(new Hobby("Food", 2), new Hobby("Biking", 3))));
-        this.userRepository.save(new User("user2", 45, List.of(new Hobby("Food", 2), new Hobby("Hiking", 3))));
+        this.userRepository.save(new User("user1", 42, List.of(new Hobby("Food", 2), new Hobby("Biking", 3)),List.of(1,2,3)));
+        this.userRepository.save(new User("user2", 45, List.of(new Hobby("Food", 2), new Hobby("Hiking", 3)), List.of(4,5,6)));
 
         UpdateResult updateResult = service.updateSpecificHobbyEntry("Biking", 7);
         List<User> users = service.findUserByHobby("Biking");
@@ -113,8 +137,8 @@ class UserRepositoryTestWithTestContainers {
 
     @Test
     void updateAllHobbyEntriesShouldUpdateAllEntriesInAllDocuments() {
-        this.userRepository.save(new User("user1", 42, List.of(new Hobby("Food", 2), new Hobby("Biking", 3))));
-        this.userRepository.save(new User("user2", 45, List.of(new Hobby("Food", 2), new Hobby("Hiking", 3))));
+        this.userRepository.save(new User("user1", 42, List.of(new Hobby("Food", 2), new Hobby("Biking", 3)),List.of(1,2,3)));
+        this.userRepository.save(new User("user2", 45, List.of(new Hobby("Food", 2), new Hobby("Hiking", 3)), List.of(4,5,6)));
 
         UpdateResult updateResult = service.updateAllHobbyEntries(7);
         List<User> users = userRepository.findAll();
@@ -123,4 +147,6 @@ class UserRepositoryTestWithTestContainers {
         users.stream()
                 .forEach(user -> Optional.ofNullable(user.getHobbies()).stream().flatMap(list -> list.stream()).forEach(hobby -> assertEquals(7, hobby.getPerWeek())));
     }
+
+
 }

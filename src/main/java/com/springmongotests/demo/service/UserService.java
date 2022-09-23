@@ -53,4 +53,20 @@ public class UserService {
                 mongoTemplate.updateMulti(hobbyQuery, removeUpdate, User.class);
         return updateResult;
     }
+
+    public UpdateResult removeLuckyNumber(String id, int i) {
+        Query removeQuery = Query.query(Criteria.where("id").is(id));
+        Update removeUpdate = new Update().pull("luckyNumbers", i);
+        UpdateResult updateResult =
+                mongoTemplate.updateMulti(removeQuery, removeUpdate, User.class);
+        return updateResult;
+    }
+
+    public UpdateResult removeLuckyNumbers(String id, Integer[] numbers) {
+        Query removeQuery = Query.query(Criteria.where("id").is(id));
+        Update removeUpdate = new Update().pullAll("luckyNumbers", numbers);
+        UpdateResult updateResult =
+                mongoTemplate.updateMulti(removeQuery, removeUpdate, User.class);
+        return updateResult;
+    }
 }
